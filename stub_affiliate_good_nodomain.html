@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <script type="text/javascript">
+        "use strict";
+        function getQueryParam (name) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] === name) {
+                    return pair[1];
+                }
+            }
+        };
+
+        function setupAffiliate() {
+            setTimeout(function() {
+                window.parent.parent.document.cookie = "stubAuth=stubAuthUser;";
+                document.getElementById("demo").innerHTML = "Login Succeeded: " + Date();
+                var redirectTo = getQueryParam("RelayState");
+                redirectTo = decodeURIComponent(redirectTo);
+                window.location.href = redirectTo + "?message=loginSuccess";
+            }, 2000);
+        }
+        </script>
+    </head>>
+    <body body onload="setupAffiliate()" bgcolor="#E6E6FA">
+        <h1>Good Affiliate - No Domain</h1>
+        <p id="demo"> This affiliate will succeed login after 2 seconds and set a stubAuth cookie</p>
+    </body>
+</html>
+

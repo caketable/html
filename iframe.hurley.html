@@ -1,0 +1,51 @@
+<!-- service (hurley) specifc handling of iframe communications -->
+<!DOCTYPE html>
+<html style="height:100%; width:100%">
+    <head>
+        <script type="text/javascript">
+            // after the auth process is complete
+            // we would be redirected to this
+
+            var global = this;
+
+            function notifyParent() {
+                var query = window.location.search.substring(1);
+                var vars = query.split("&");
+                var affiliateResponse = {};
+                vars.forEach(function (param) {
+                    var nameValuePair = param.split("=");
+                    affiliateResponse[nameValuePair[0]] = decodeURIComponent(nameValuePair[1]);
+                });
+
+                affilliateResponseString = JSON.stringify(affiliateResponse);
+
+                // Choose the communication method.
+                // Ideally this iframe would not need to know about cross-platform shimming, but due to local content hosting restrictions
+                // on Android and iOS it becomes much simpler to just polyfill the "postMessage" and not require a PAL specific iframe file.
+                // We could move this to a helper JS that gets <script> included if we ever need a different service-dependent iframe host.
+                var post;
+                if (global.native &&
+                    global.native.postMessage) {
+                    // Wrap the natively exported post method
+                    post = function (msg) {
+                        global.native.postMessage(msg);
+                    };
+                } else if (global.parent !== global) {
+                    // Wrap the DOM post method
+                    post = function (msg, origin) {
+                        global.parent.postMessage(msg, "*" /*origin*/);
+                    };
+                } else {
+                    // We don't have a native exported postMessage or we are not in a nested iframe, fall back to hadron:// communication protocol
+                    post = function () {
+                        global.window.location = "hadron://message/?data=" + encodeURIComponent(affilliateResponseString);
+                    };
+                }
+
+                post(affilliateResponseString);
+            };
+        </script>
+    </head>
+    <body onload="notifyParent()" style="margin:0px; padding:0px; width:100%; height:100%; overflow:hidden; visibility:hidden">
+    </body>
+</html>
